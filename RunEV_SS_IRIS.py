@@ -17,7 +17,7 @@ print('Loading data')
 # DAILY DISTANCE 
 # Histograms of Distance per commune
 print('Loading Histograms of distance')
-folder_hdata = r'c:\user\U546416\Documents\PhD\Data\Mobilité'
+folder_hdata = #HERE YOUR FOLDER OF DISTANCE DATA
 hhome = pd.read_csv(folder_hdata + r'\HistHomeModal.csv', 
                     engine='python', index_col=0)
 hwork = pd.read_csv(folder_hdata + r'\HistWorkModal.csv', 
@@ -31,7 +31,7 @@ print('Finished loading, elapsed time: {} s'.format(np.round(times[-1]-times[-2]
 # DEMOGRAPHIC DATA, NUMBER OF RESIDENTS & WORKERS PER IRIS
 # IRIS & Commune info
 print('Loading IRIS')
-folder_consodata = r'c:\user\U546416\Documents\PhD\Data\Mobilité\Data_Traitee\Conso'
+folder_consodata = #HERE YOUR FOLDER OF IRIS DATA
 iris = pd.read_csv(folder_consodata + r'\IRIS_enedis_2017.csv', 
                     engine='python', index_col=0)
 times.append(time.time())
@@ -41,12 +41,13 @@ print('Finished loading, elapsed time: {} s'.format(np.round(times[-1]-times[-2]
 # Histograms of arrival/departures
 print('Arrival departures')
 # Bi variate distributions for arrival/departures
-folder_arrdep = r'c:\user\U546416\Documents\PhD\Data\Mobilité\Data_Traitee\Mobilité'
+folder_arrdep = # HERE YOUR FOLDER OF ARRIVAL DEPARTURE (time) DATA
+# bivariate distribution for home chargers
 res_arr_dep_wd = pd.read_csv(folder_arrdep + r'\EN_arrdep_wd_modifFR.csv', 
                              engine='python', index_col=0)
 res_arr_dep_we = pd.read_csv(folder_arrdep + r'\EN_arrdep_we_modifFR.csv', 
                              engine='python', index_col=0)
-# Bi-variate distribution
+# Bi-variate distribution for workers
 work_arr_dep_wd = pd.read_csv(folder_arrdep + r'\Arr_Dep_pdf.csv', 
                           engine='python', index_col=0)
 times.append(time.time())
@@ -59,7 +60,8 @@ print('Finished loading, elapsed time: {} s'.format(np.round(times[-1]-times[-2]
 #############################
 # IRIS TO SIMULATE
 # iris_ss should be a list/pandas Series with IRIS codes
-data_ss = pd.read_csv(r'c:\user\U546416\Documents\PhD\Data\MVGrids\Boriette\ProcessedData\MVLV.csv',
+folder_grid = #HERE YOUR FOLDER OF GRID DATA
+data_ss = pd.read_csv(folder_grid + 'MVLV.csv',
                        index_col=0, engine='python')
 iris_ss = data_ss.Geo.unique()    
 ############################
