@@ -17,7 +17,7 @@ print('Loading data')
 # DAILY DISTANCE 
 # Histograms of Distance per commune
 print('Loading Histograms of distance')
-folder_hdata = #HERE YOUR FOLDER OF DISTANCE DATA
+folder_hdata = r'c:\user\U546416\Documents\PhD\Data\Mobilité'
 hhome = pd.read_csv(folder_hdata + r'\HistHomeModal.csv', 
                     engine='python', index_col=0)
 hwork = pd.read_csv(folder_hdata + r'\HistWorkModal.csv', 
@@ -31,7 +31,7 @@ print('Finished loading, elapsed time: {} s'.format(np.round(times[-1]-times[-2]
 # DEMOGRAPHIC DATA, NUMBER OF RESIDENTS & WORKERS PER IRIS
 # IRIS & Commune info
 print('Loading IRIS')
-folder_consodata = #HERE YOUR FOLDER OF IRIS DATA
+folder_consodata = r'c:\user\U546416\Documents\PhD\Data\Mobilité\Data_Traitee\Conso'
 iris = pd.read_csv(folder_consodata + r'\IRIS_enedis_2017.csv', 
                     engine='python', index_col=0)
 times.append(time.time())
@@ -41,13 +41,12 @@ print('Finished loading, elapsed time: {} s'.format(np.round(times[-1]-times[-2]
 # Histograms of arrival/departures
 print('Arrival departures')
 # Bi variate distributions for arrival/departures
-folder_arrdep = # HERE YOUR FOLDER OF ARRIVAL DEPARTURE (time) DATA
-# bivariate distribution for home chargers
+folder_arrdep = r'c:\user\U546416\Documents\PhD\Data\Mobilité\Data_Traitee\Mobilité'
 res_arr_dep_wd = pd.read_csv(folder_arrdep + r'\EN_arrdep_wd_modifFR.csv', 
                              engine='python', index_col=0)
 res_arr_dep_we = pd.read_csv(folder_arrdep + r'\EN_arrdep_we_modifFR.csv', 
                              engine='python', index_col=0)
-# Bi-variate distribution for workers
+# Bi-variate distribution
 work_arr_dep_wd = pd.read_csv(folder_arrdep + r'\Arr_Dep_pdf.csv', 
                           engine='python', index_col=0)
 times.append(time.time())
@@ -60,8 +59,7 @@ print('Finished loading, elapsed time: {} s'.format(np.round(times[-1]-times[-2]
 #############################
 # IRIS TO SIMULATE
 # iris_ss should be a list/pandas Series with IRIS codes
-folder_grid = #HERE YOUR FOLDER OF GRID DATA
-data_ss = pd.read_csv(folder_grid + 'MVLV.csv',
+data_ss = pd.read_csv(r'c:\user\U546416\Documents\PhD\Data\MVGrids\Boriette\ProcessedData\MVLV.csv',
                        index_col=0, engine='python')
 iris_ss = data_ss.Geo.unique()    
 ############################
@@ -71,19 +69,20 @@ iris_ss = data_ss.Geo.unique()
 # Days, steps
 nweeks = 3
 ndays = 7 + 7*nweeks + 1 # Recommended to have at least 1 extra day at the end and one week before.
-step = 15 # time step (minutes)
+step = 30 # time step (minutes)
 
 ###########################################
 # GENERAL EV DATA
 
 # EV penetration (0 to 1)
-ev_penetration = 1
+ev_penetration = 0.5
 # EV home/work charging (0 to 1). 0.3 means 30% of EVs will charge 'at work'
 ev_work_ratio = 0.3
 # EV charging parameters (charging power, battery size, etc)
-charging_power_home=7.2
+charging_power_home=7
 charging_power_work=10
 batt_size = 50
+driving_eff = 0.18
 
 # Tou is used if Off-peak hours are enforced for home charging
 tou = False
@@ -112,7 +111,8 @@ arr_dep_data_w = dict(pdf_a_d=work_arr_dep_wd.values)
 # CREATING SET OF PARAMETERS TO CREATE EV TYPES
 ##############################################
 # these are common for all types of evs
-general_params = dict(batt_size = batt_size)
+general_params = dict(batt_size = batt_size,
+                      driving_eff = driving_eff)
 
 # these are for each kind of EV type
 # Home charging params
@@ -132,73 +132,83 @@ day_params = dict(charging_power = charging_power_work,
 
 
 #%% Create Grid
+ev_ps = [0.25,0.5,0.75,1]
+ev_wrs = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
 times.append(time.time())
-grid = EVmodel.Grid(ndays=ndays, step=step)
-# Add EVs for each IRIS
-#for i in iris_ss.index:
-for i in iris_ss:
-    # Compute # of EVs 
-    # Number of Evs
-#    comm = iris_ss.COMM_CODE[i]
-    comm  = int(i)//10000
-    nevs_h = int(iris.N_VOIT[i] * ev_penetration * (1-ev_work_ratio))
-    nevs_w = int(hwork.loc[comm].sum() * iris.Work_pu[i] * # First term is total work EVs in the commune, second is the ratio of Workers in the iris
-                 ev_penetration * ev_work_ratio * 1.78) # 1.78 is the ratio between nation-wide Work EVs and Total EVs  
-    print('EVs Overnight', nevs_h)
-    print('EVs Work', nevs_w)
-    
-    
-    # Add EVs
-    grid.add_evs('Home_' + str(i) , nevs_h, ev_type='dumb',
-                 #pmin_charger=0.1,
-                 dist_wd=dict(cdf = hhome.loc[comm].cumsum()/hhome.loc[comm].sum()),
-                 **general_params,
-                 **home_params)  
-    grid.add_evs('Work_' + str(i), nevs_w, ev_type='mod',
-                 dist_wd= dict(cdf = hwork.loc[comm].cumsum()/hwork.loc[comm].sum()),
-                 **general_params,
-                 **day_params)
 
-times.append(time.time())
-print('Finished preprocessing, elapsed time: {} s'.format(np.round(times[-1]-times[-2],1)))
-
-
-#%% Do simulations
-times.append(time.time())
-grid.do_days()
-times.append(time.time())
-print('Finished running, elapsed time: {} s'.format(np.round(times[-1]-times[-2],1)))
-global_data = grid.get_global_data()
-ev_data = grid.get_ev_data()
-grid.plot_total_load(day_ini=7, days=7)
-grid.plot_ev_load(day_ini=7, days=7)
-
-print('EV mean dist')
-for t in grid.ev_sets:
-    if 'Home' in t:
-        print(t, 'Wd: ', np.round(np.mean([ev.dist_wd for ev in grid.evs_sets[t]]),1),
-              ';  Weekend: ', np.round(np.mean([ev.dist_we for ev in grid.evs_sets[t]]),1))
-for t in grid.ev_sets:
-    if 'Home' in t:
-        print(t, 'Wd: ', np.round(np.mean([ev.dist_wd for ev in grid.evs_sets[t]]),1), 
-              ';  Weekend: ', np.round(np.mean([ev.dist_we for ev in grid.evs_sets[t]]),1))
-
-print('EV plug in')
-for t in grid.ev_sets:
-    if 'Home' in t:
-        print(t, 'Wd: ', np.round(np.mean([ev.ch_status.sum() for ev in grid.evs_sets[t]])/grid.ndays,3))
-for t in grid.ev_sets:
-    if 'Work' in t:
-        print(t, 'Wd: ', np.round(np.mean([ev.ch_status.sum() for ev in grid.evs_sets[t]])/grid.ndays,3))
-
-
-#%% Get EV data and save
-output_folder = ''
-init_idx = int(7 * 24 *60 / step)
-end_idx =  int(1 * 24 *60 / step)
-evdata = {}
-for t in grid.evs:
-    evdata[t] = grid.ev_load[t][init_idx:-end_idx]
-evdata = pd.DataFrame(evdata)
-
-evdata.to_csv(output_folder + 'EV_data.csv')
+for ev_p in ev_ps:
+    for ev_wr in ev_wrs:
+        print('Creating grid for EV penetration {} and work ratio {}'.format(ev_p, ev_wr))
+        grid = EVmodel.Grid(ndays=ndays, step=step, verbose=False)
+        # Add EVs for each IRIS
+        #for i in iris_ss.index:
+        for i in iris_ss:
+            # Compute # of EVs 
+            # Number of Evs
+        #    comm = iris_ss.COMM_CODE[i]
+            comm  = int(i)//10000
+            nevs_h = int(iris.N_VOIT[i] * ev_p * (1-ev_wr))
+            nevs_w = int(hwork.loc[comm].sum() * iris.Work_pu[i] * # First term is total work EVs in the commune, second is the ratio of Workers in the iris
+                         ev_p * ev_wr * 1.78) # 1.78 is the ratio between nation-wide Work EVs and Total EVs  
+#            print('EVs Overnight', nevs_h)
+#            print('EVs Work', nevs_w)
+            
+            
+            # Add EVs
+            grid.add_evs('Home_' + str(i) , nevs_h, ev_type='dumb',
+                         #pmin_charger=0.1,
+                         dist_wd=dict(cdf = hhome.loc[comm].cumsum()/hhome.loc[comm].sum()),
+                         **general_params,
+                         **home_params)  
+            grid.add_evs('Work_' + str(i), nevs_w, ev_type='mod',
+                         dist_wd= dict(cdf = hwork.loc[comm].cumsum()/hwork.loc[comm].sum()),
+                         **general_params,
+                         **day_params)
+        
+        times.append(time.time())
+        print('Finished preprocessing, elapsed time: {} s'.format(np.round(times[-1]-times[-2],1)))
+        print('Total EVs: {}'.format(len(grid.evs)))
+        
+        
+        #% Do simulations
+        print('Running EV simulation')
+        times.append(time.time())
+        grid.do_days()
+        times.append(time.time())
+        print('Finished running, elapsed time: {} s'.format(np.round(times[-1]-times[-2],1)))
+        global_data = grid.get_global_data()
+        ev_data = grid.get_ev_data()
+        grid.plot_total_load(day_ini=7, days=7)
+        grid.plot_ev_load(day_ini=7, days=7)
+        
+        #print('EV mean dist')
+        #for t in grid.ev_sets:
+        #    if 'Home' in t:
+        #        print(t, 'Wd: ', np.round(np.mean([ev.dist_wd for ev in grid.evs_sets[t]]),1),
+        #              ';  Weekend: ', np.round(np.mean([ev.dist_we for ev in grid.evs_sets[t]]),1))
+        #for t in grid.ev_sets:
+        #    if 'Home' in t:
+        #        print(t, 'Wd: ', np.round(np.mean([ev.dist_wd for ev in grid.evs_sets[t]]),1), 
+        #              ';  Weekend: ', np.round(np.mean([ev.dist_we for ev in grid.evs_sets[t]]),1))
+        #
+        #print('EV plug in')
+        #for t in grid.ev_sets:
+        #    if 'Home' in t:
+        #        print(t, 'Wd: ', np.round(np.mean([ev.ch_status.sum() for ev in grid.evs_sets[t]])/grid.ndays,3))
+        #for t in grid.ev_sets:
+        #    if 'Work' in t:
+        #        print(t, 'Wd: ', np.round(np.mean([ev.ch_status.sum() for ev in grid.evs_sets[t]])/grid.ndays,3))
+        
+        
+        #% Get EV data and save
+        print('Saving data')
+        output_folder = r'c:\user\U546416\Documents\PhD\Data\MVGrids\Boriette\Profiles\\'
+        of_name = 'EV_p' + str(ev_p) + '_w' + str(ev_wr) + '.csv'
+        init_idx = int(7 * 24 *60 / step)
+        end_idx =  int(1 * 24 *60 / step)
+        evdata = {}
+        for t in grid.evs_sets:
+            evdata[t] = grid.ev_load[t][init_idx:-end_idx]
+        evdata = pd.DataFrame(evdata)
+        
+        evdata.to_csv(output_folder + of_name)
