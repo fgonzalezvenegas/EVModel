@@ -6,5 +6,31 @@ It includes a non-systematic plug-in behavior model. If you use it, please refer
 
 A script to generate EV charging profiles is provided.
 
-# MAIN PARAMETERS:
+# CHARGING STRATEGIES:
 
+# Uncontrolled:
+The charging process starts as soon as possible
+
+# Modulated:
+The charging process is done at constant power during the whole charging session.
+
+# Cost minimization:
+Optimized charging based on variable costs using cvxopt library
+
+# Reversed:
+Similar to Uncontrolled, but charging starts at the end of charging session, ensuring a full charge.
+
+# RandStart:
+Charging process starts at a random moment between the start and end of charging session, ensuring a full charge.
+
+# PFC: 
+Primary frequency regulation based on the algorithm in Codani, 2016.
+
+
+# PARAMETERS:
+When creating a set of vehicles to simulate, you can specify the following parameters:
+CHARGING PARAMETERS
+ch_power : Charging power [kW], default 3.6
+ch_eff : Charger efficiency [pu], default 0.95 
+dr_eff : Driving efficiency/consumption [kWh/km], default 0.2
+PLUG-IN DECISION PARAMETERS
