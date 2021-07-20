@@ -30,7 +30,17 @@ Primary frequency regulation based on the algorithm in Codani, 2016.
 # PARAMETERS:
 When creating a set of vehicles to simulate, you can specify the following parameters:
 CHARGING PARAMETERS
+
 ch_power : Charging power [kW], default 3.6
+
 ch_eff : Charger efficiency [pu], default 0.95 
+
 dr_eff : Driving efficiency/consumption [kWh/km], default 0.2
+
 PLUG-IN DECISION PARAMETERS
+
+charging_type: plug-in behavior of the user. Types: if_needed (non-systematic), all_days, and others
+
+alpha: plug-in preference of user. Default value given by calibration with Electric Nation data.
+
+range_anxiety: 
