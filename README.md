@@ -65,10 +65,15 @@ arrival_departure_data: Dictionnary of probability parameters for week-day arriv
 TIME-OF-USE CHARGING:
 
 tou_ini: hour at which the off-peak period starts (weekdays)
+
 tou_end: hour at which the off-peak period ends
+
 tou_we: Whether there is an off-peak peariod during the weekend. If false, the whole weekend is considered as off-peak
+
 tou_ini_we: hour at which the off-peak period starts during weekends
+
 tou_end_we: hour at which the off-peak period starts durign weekends
 
 OTHER:
+
 boss: Aggregator (object) that will set prices/limits to the charging process.
